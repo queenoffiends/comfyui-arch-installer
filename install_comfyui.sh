@@ -42,7 +42,7 @@ LOG_FILE="/tmp/comfyui_install.log"
 (
     echo "10"
     echo "# Cloning ComfyUI repository..."
-    git clone https://github.com/comfyanonymous/ComfyUI.git "$INSTALL_DIR/ComfyUI" >> "$LOG_FILE" 2>&1
+    git clone https://github.com/comfyanonymous/ComfyUI.git "$INSTALL_DIR/ComfyUI" >> "$LOG_FILE" 2>&1 || exit 1
     
     echo "30"
     echo "# Creating Python virtual environment..."
@@ -50,28 +50,28 @@ LOG_FILE="/tmp/comfyui_install.log"
     
     # Use python3.12 if available (to fix Arch PyTorch 2.8.0 issues), otherwise use default python
     if command -v python3.12 &> /dev/null; then
-        python3.12 -m venv venv >> "$LOG_FILE" 2>&1
+        python3.12 -m venv venv >> "$LOG_FILE" 2>&1 || exit 1
     else
-        python -m venv venv >> "$LOG_FILE" 2>&1
+        python -m venv venv >> "$LOG_FILE" 2>&1 || exit 1
     fi
 
     echo "40"
     echo "# Activating virtual environment..."
-    source venv/bin/activate
+    source venv/bin/activate || exit 1
 
     echo "50"
     echo "# Installing PyTorch for $GPU_TYPE (This will take a while)..."
     if [ "$GPU_TYPE" == "NVIDIA" ]; then
-        pip install torch torchvision torchaudio >> "$LOG_FILE" 2>&1
+        pip install torch torchvision torchaudio >> "$LOG_FILE" 2>&1 || exit 1
     elif [ "$GPU_TYPE" == "AMD" ]; then
-        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.1 >> "$LOG_FILE" 2>&1
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/rocm6.1 >> "$LOG_FILE" 2>&1 || exit 1
     else
-        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu >> "$LOG_FILE" 2>&1
+        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu >> "$LOG_FILE" 2>&1 || exit 1
     fi
 
     echo "80"
     echo "# Installing ComfyUI dependencies..."
-    pip install -r requirements.txt >> "$LOG_FILE" 2>&1
+    pip install -r requirements.txt >> "$LOG_FILE" 2>&1 || exit 1
 
     echo "95"
     echo "# Creating Fish launch script..."
