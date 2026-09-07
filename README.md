@@ -1,3 +1,4 @@
+```markdown
 # ComfyUI GUI Installer for Arch Linux
 
 An interactive, GUI-driven installation and launcher setup script for **ComfyUI** on Arch Linux and Arch-based distributions (EndeavourOS, Manjaro, CachyOS).
@@ -34,7 +35,91 @@ Run the following commands in your terminal to clone the repository and launch t
 
 ### Fish Shell
 ```fish
-git clone https://github.com/queenoffiends/comfyui-arch-installer.git
+git clone [https://github.com/queenoffiends/comfyui-arch-installer.git](https://github.com/queenoffiends/comfyui-arch-installer.git)
 cd comfyui-arch-installer
 chmod +x install_comfyui.sh
 ./install_comfyui.sh
+
+```
+
+### Bash / Zsh
+
+```bash
+git clone [https://github.com/queenoffiends/comfyui-arch-installer.git](https://github.com/queenoffiends/comfyui-arch-installer.git)
+cd comfyui-arch-installer
+chmod +x install_comfyui.sh
+./install_comfyui.sh
+
+```
+
+---
+
+## 🖥️ Usage
+
+### Launching ComfyUI
+
+After installation completes, navigate to your installation folder and execute the generated launch script:
+
+**Fish Shell:**
+
+```fish
+cd /path/to/ComfyUI
+./run_comfyui.fish
+
+```
+
+**Bash / Zsh:**
+
+```bash
+cd /path/to/ComfyUI
+source venv/bin/activate
+python main.py
+
+```
+
+### Quick Launcher Abbreviation (Fish)
+
+To launch ComfyUI from anywhere in your Fish terminal without navigating directories, set up an abbreviation:
+
+```fish
+abbr -a comfyui "/path/to/ComfyUI/run_comfyui.fish"
+
+```
+
+Then simply run `comfyui` from any terminal session.
+
+---
+
+## 🛠️ Troubleshooting & Logs
+
+If an error occurs during installation, check the installation log created at:
+
+```bash
+/tmp/comfyui_install.log
+
+```
+
+### Common Arch Linux Edge Cases
+
+#### 1. NVIDIA GTX 10-Series GPUs (Pascal / Compute Capability 6.1)
+
+Default PyTorch builds targeting CUDA 13.0+ drop support for older GPUs (e.g., GTX 1070 / 1080). If you receive an `sm_61` compute capability error, force-reinstall PyTorch with CUDA 12.1 inside your virtual environment:
+
+```fish
+source venv/bin/activate.fish
+pip install --upgrade --force-reinstall torch torchvision torchaudio --index-url [https://download.pytorch.org/whl/cu121](https://download.pytorch.org/whl/cu121)
+
+```
+
+#### 2. `Fatal Python error: Illegal instruction` (`kornia-rs`)
+
+If ComfyUI crashes on startup during module import on older CPUs, compile `kornia-rs` locally from source:
+
+```fish
+sudo pacman -S --needed rust
+pip install --force-reinstall --no-binary kornia-rs kornia-rs
+
+```
+
+---
+
