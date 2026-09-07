@@ -34,7 +34,7 @@ Run the following commands in your terminal to clone the repository and launch t
 
 ### Fish Shell
 ```fish
-git clone [https://github.com/queenoffiends/comfyui-arch-installer.git](https://github.com/queenoffiends/comfyui-arch-installer.git)
+git clone https://github.com/queenoffiends/comfyui-arch-installer.git
 cd comfyui-arch-installer
 chmod +x install_comfyui.sh
 ./install_comfyui.sh
