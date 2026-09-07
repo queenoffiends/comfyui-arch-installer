@@ -1,39 +1,84 @@
-# ComfyUI GUI Installer for Arch Linux
+# ComfyUI GUI Installer for Arch Linux (Fish Shell Edition)
 
-An interactive, GUI-driven installation and launcher setup script for **ComfyUI** on Arch Linux and Arch-based distributions (EndeavourOS, Manjaro, CachyOS).
+A one-click, GUI-driven installer for [ComfyUI](https://github.com/comfyanonymous/ComfyUI) on Arch Linux, built with `zenity` dialogs and producing a ready-to-use [Fish shell](https://fishshell.com/) launch script.
 
-Built specifically to resolve common Arch Linux friction points—including PEP-668 virtual environment restrictions, rolling Python release ABI mismatches, and native Fish shell virtualenv activation.
+## What it does
 
----
+1. **Checks dependencies** — verifies `zenity`, `git`, and `python` are installed, and offers to install any missing ones via `pacman` (requires `sudo`).
+2. **Prompts for an install directory** via a native file picker.
+3. **Prompts for your GPU type** — NVIDIA, AMD, or CPU-only — and installs the matching PyTorch build.
+4. **Clones ComfyUI**, creates a Python virtual environment, installs PyTorch and ComfyUI's dependencies, all with a live progress bar.
+5. **Generates a Fish launcher** (`run_comfyui.fish`) in the install directory so you can start ComfyUI with a single command afterward.
+6. **Reports success or failure** in a dialog, with a log file at `/tmp/comfyui_install.log` for troubleshooting.
 
-## Key Features
+## Requirements
 
-* **GUI-Driven Setup:** Interactive Zenity dialogs for directory selection, GPU hardware targeting, and real-time installation progress.
-* **Arch & PEP-668 Compliant:** Automatically provisions an isolated Python virtual environment (`venv`) to keep system packages clean.
-* **Python 3.12 Auto-Fallback:** Prefers `python3.12` when available to prevent PyTorch wheel ABI incompatibilities caused by Arch's rolling Python updates.
-* **Multi-GPU Target Support:** Automatically configures PyTorch index URLs for:
-  * **NVIDIA GPUs** (CUDA)
-  * **AMD GPUs** (ROCm 6.1)
-  * **CPU-only mode**
-* **Native Fish Shell Launcher:** Generates a dedicated `run_comfyui.fish` script (`activate.fish`), allowing Fish users to launch ComfyUI without broken environment variables.
-* **Automated Prerequisite Resolution:** Detects missing system tools (`zenity`, `git`, `python`) and prompts for installation via `pacman`.
+- Arch Linux (or an Arch-based distro with `pacman`)
+- [Fish shell](https://fishshell.com/) (only needed to *run* ComfyUI afterward — the installer itself is `bash`)
+- `sudo` access, if `zenity`, `git`, or `python` aren't already installed
 
----
+## Usage
 
-## Prerequisites
-
-* **Operating System:** Arch Linux or any Arch-based distribution.
-* **Permissions:** `sudo` privileges (required only if system packages like `zenity` are missing).
-* **Hardware:** NVIDIA CUDA or AMD ROCm graphics card recommended.
-
----
-
-## Quick Start
-
-Run the following commands in your terminal to clone the repository and launch the GUI installer:
-
-```fish
-git clone https://github.com/queenoffiends/comfyui-arch-installer.git
-cd comfyui-arch-installer
+```bash
+https://github.com/queenoffiends/comfyui-arch-installer.git
 chmod +x install_comfyui.sh
 ./install_comfyui.sh
+```
+
+Follow the dialogs: pick an install directory, pick your GPU type, and let it run. Once finished, start ComfyUI with:
+
+```fish
+/path/to/install/dir/ComfyUI/run_comfyui.fish
+```
+
+## Known issues & troubleshooting
+
+### `Fatal Python error: Illegal instruction` on startup
+
+This comes from `kornia_rs`, a dependency pulled in by ComfyUI's built-in post-processing nodes. The published `kornia_rs` wheel is compiled assuming at least AVX/AVX2/FMA3 CPU support. On older CPUs (pre-2011, before AVX existed) — or in some VM/container setups where the hypervisor doesn't pass those CPU flags through to the guest — importing it crashes the whole process before ComfyUI even starts.
+
+**Check if this affects you:**
+
+```fish
+grep flags /proc/cpuinfo | head -1 | tr ' ' '\n' | grep -E 'avx|fma'
+```
+
+If this prints nothing, your CPU (or your VM's exposed CPU flags) lacks AVX/FMA support.
+
+**Fix — remove the offending package** (a few post-processing nodes will be unavailable, everything else works normally):
+
+```fish
+source venv/bin/activate.fish
+pip uninstall -y kornia kornia_rs
+```
+
+If your CPU *does* support AVX2/FMA (the grep above prints something) but you're still crashing, try rebuilding `kornia_rs` from source instead, which requires a Rust toolchain (`cargo`):
+
+```fish
+pip install kornia-rs --force-reinstall --no-cache-dir --no-binary :all:
+```
+
+### GPU not fully utilized / "does not include kernels for this GPU" warning
+
+The default installer runs `pip install torch torchvision torchaudio`, which currently pulls a CUDA 13.0 build. That build drops kernel support for older NVIDIA compute capabilities (e.g. Pascal-generation cards like the GTX 10-series, compute capability 6.x). If you see a warning like:
+
+```
+Your installed torch==X.Y.Z+cu130 does not include kernels for this GPU.
+```
+
+Reinstall PyTorch against an older CUDA build that still supports your card, e.g.:
+
+```fish
+source venv/bin/activate.fish
+pip install torch==2.14.0 --index-url https://download.pytorch.org/whl/cu126
+```
+
+(Check [pytorch.org/get-started/locally](https://pytorch.org/get-started/locally/) for the CUDA build matching your specific GPU generation.)
+
+## Log file
+
+All install output is captured in `/tmp/comfyui_install.log`. If the installer reports a failure, check this file first for the underlying error.
+
+## License
+
+MIT (or update to match your preferred license).
