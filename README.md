@@ -21,6 +21,7 @@ A one-click, GUI-driven installer for [ComfyUI](https://github.com/comfyanonymou
 
 ```bash
 https://github.com/queenoffiends/comfyui-arch-installer.git
+cd /path/to/install/dir/ComfyUI/
 chmod +x install_comfyui.sh
 ./install_comfyui.sh
 ```
